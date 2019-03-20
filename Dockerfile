@@ -1,6 +1,7 @@
 FROM debian:stretch
 
 RUN apt-get update && apt-get -y install \
+    # Cyrus dependencies and build tools
     git \
     build-essential \
     autoconf \
@@ -76,6 +77,15 @@ COPY ./conf/pam-mysql.conf /etc/pam-mysql.conf
 COPY ./conf/cyrus.conf /etc/cyrus.conf
 COPY ./conf/imapd.conf /etc/imapd.conf
 
+# Add cyrus services (https://www.cyrusimap.org/imap/installing.html#protocol-ports)
+RUN echo '\n# Services used for cyrus\n\
+httpcyrus 8080/tcp # Cyrus HTTP API\n\
+lmtp      2003/tcp # Lightweight Mail Transport Protocol service\n\
+smmap     2004/tcp # Cyrus smmapd (quota check) service\n\
+csync     2005/tcp # Cyrus replication service\n\
+mupdate   3905/tcp # Cyrus mupdate service\n\
+sieve     4190/tcp # timsieved Sieve Mail Filtering Language service' >> /etc/services
+
 # Prepare directories
 RUN mkdir -p /var/lib/cyrus /var/spool/cyrus && \
     chown -R cyrus:mail /var/lib/cyrus /var/spool/cyrus && \
@@ -94,3 +104,6 @@ RUN mkdir -p /run/cyrus /run/cyrus/socket && \
 
 # TODO remove -d and -D (debugging) flags
 ENTRYPOINT multirun "saslauthd -a pam -c -r -d" "/root/cyrus/cyrus-imapd/master/master -D"
+
+# pop3 imap imaps pop3s kpop lmtp smmap csync mupdate sieve http
+EXPOSE 110 143 993 995 1109 2003 2004 2005 3905 4190 8080
