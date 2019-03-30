@@ -1,8 +1,9 @@
-FROM debian:stretch
+# We want postfix 3.4 so buster it is
+FROM debian:buster
 
 RUN apt-get update && apt-get -y install \
-  # DEBUG STUFF
-  rsyslog \
+  # TODO DEBUG STUFF
+  # rsyslog \
   procps \
   vim \
   telnet \
@@ -40,13 +41,7 @@ RUN groupadd -fr sasl && usermod -aG sasl postfix && \
 # Only postfix user should have access to mysql map files (passwords are in there!)
     chmod 640 /etc/postfix/mysql-*.cf && \
     chgrp postfix /etc/postfix/mysql-*.cf && \
-# Move sasl socket dir, create link (https://serverfault.com/questions/319703/postfix-sasl-cannot-connect-to-saslauthd-server-no-such-file-or-directory)
-    mkdir -p /var/spool/postfix/var/run/saslauthd && \
-    # Delete the default directory (it might be there?)
-    rm -rf /var/run/saslauthd && \
-    ln -sfn /var/spool/postfix/var/run/saslauthd /var/run/saslauthd
-    # chown root:sasl /var/run/saslauthd && \
-    # mkdir -p /var/spool/postfix/var/run/ && \
-    # ln -s /var/run/saslauthd /var/spool/postfix/var/run/saslauthd
+# https://wiki.debian.org/PostfixAndSASL#Implementation_using_Cyrus_SASL
+    dpkg-statoverride --add root sasl 710 /var/spool/postfix/var/run/saslauthd
 
 ENTRYPOINT /root/entrypoint.sh
