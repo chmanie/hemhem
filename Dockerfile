@@ -1,3 +1,5 @@
+# TODO: Use multistage-build https://docs.docker.com/develop/develop-images/multistage-build/
+
 FROM debian:stretch
 
 RUN apt-get update && apt-get -y install \
@@ -36,8 +38,9 @@ RUN apt-get update && apt-get -y install \
     python-docutils \
     libmagic-dev \
     tclsh \
-    python-pygments
-    # TODO: install syslog
+    python-pygments \
+    # syslog (because cyrus won't log to anywhere else)
+    syslog-ng
 
 # Install multirun https://nicolas-van.github.io/multirun/
 ADD https://github.com/nicolas-van/multirun/releases/download/0.3.0/multirun-ubuntu-0.3.0.tar.gz /root
@@ -76,6 +79,7 @@ COPY ./conf/pam-imap /etc/pam.d/imap
 COPY ./conf/pam-mysql.conf /etc/pam-mysql.conf
 COPY ./conf/cyrus.conf /etc/cyrus.conf
 COPY ./conf/imapd.conf /etc/imapd.conf
+COPY ./conf/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 
 # Add cyrus services (https://www.cyrusimap.org/imap/installing.html#protocol-ports)
 RUN echo '\n# Services used for cyrus\n\
