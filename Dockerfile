@@ -68,7 +68,7 @@ RUN cd /root/cyrus && git clone https://github.com/cyrusimap/cyrus-imapd.git && 
 
 RUN useradd -c "Cyrus IMAP Server" -d /var/lib/cyrus -g mail -s /bin/bash -r cyrus
 
-# saslauth for ubuntu, sasl for debian
+# User cyrus has to be member of `sasl` group
 RUN groupadd -fr sasl && usermod -aG sasl cyrus
 
 # for root CAs (?)
@@ -106,8 +106,9 @@ RUN mkdir -p /run/cyrus /run/cyrus/socket && \
     chown -h cyrus:mail /run/cyrus/socket && \
     chmod 750 /run/cyrus/socket
 
-# TODO remove -d and -D (debugging) flags
-ENTRYPOINT multirun "saslauthd -a pam -c -r -d" "/root/cyrus/cyrus-imapd/master/master -D"
+COPY ./entrypoint.sh /root/cyrus/entrypoint.sh
+
+ENTRYPOINT /root/cyrus/entrypoint.sh
 
 # pop3 imap imaps pop3s kpop lmtp smmap csync mupdate sieve http
 EXPOSE 110 143 993 995 1109 2003 2004 2005 3905 4190 8080
