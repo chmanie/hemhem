@@ -1,0 +1,5 @@
+user = root
+password = CHANGEME
+hosts = mysql
+dbname = mail
+query = SELECT destination FROM virtual_aliases WHERE source='%s'

@@ -1,0 +1,10 @@
+#%PAM-1.0
+
+auth       required     pam_nologin.so
+auth       sufficient   pam_mysql.so config_file=/etc/pam-mysql.conf
+# TODO reenable? check this
+# auth       include      system-auth
+account    sufficient   pam_mysql.so config_file=/etc/pam-mysql.conf
+# account    include      system-auth
+password   required     pam_deny.so
+# session    include      system-auth

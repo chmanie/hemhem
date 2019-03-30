@@ -1,0 +1,5 @@
+user = root
+password = CHANGEME
+hosts = mysql
+dbname = mail
+query = SELECT email FROM virtual_users WHERE email='%s'

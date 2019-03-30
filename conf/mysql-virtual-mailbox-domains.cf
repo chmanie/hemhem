@@ -1,0 +1,5 @@
+user = root
+password = CHANGEME
+hosts = mysql
+dbname = mail
+query = SELECT 1 FROM virtual_domains WHERE name='%s'
