@@ -1,4 +1,41 @@
-FROM debian:stretch as builder
+FROM debian:stretch as libs-builder
+
+RUN apt-get update && apt-get -y install \
+    # Cyrus lib dependencies and build tools
+    git \
+    build-essential \
+    autoconf \
+    automake \
+    libtool \
+    pkg-config \
+    bison \
+    flex \
+    libssl-dev \
+    libxml2-dev \
+    libsqlite3-dev \
+    libsasl2-dev \
+    libpcre3-dev \
+    uuid-dev \
+    sudo \
+    xxd \
+    # For building the cyrus libs
+    check \
+    texinfo \
+    cmake \
+    libglib2.0-dev \
+    graphviz \
+    doxygen \
+    help2man \
+    python-docutils \
+    libmagic-dev \
+    tclsh \
+    python-pygments
+
+RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrusimap/cyruslibs.git
+
+RUN cd /root/cyrus/cyruslibs && ./build.sh
+
+FROM debian:stretch
 
 RUN apt-get update && apt-get -y install \
     # Cyrus dependencies and build tools
@@ -18,109 +55,121 @@ RUN apt-get update && apt-get -y install \
     uuid-dev \
     sudo \
     xxd \
+    # http/2
+    libnghttp2-dev \
     # For virus scan support
     libclamav-dev \
-    # # SASL
-    # libsasl2-2 \
-    # sasl2-bin \
-    # libsasl2-modules \
-    # libpam-mysql \
-    # For building the cyrus libs
-    check \
-    texinfo \
-    cmake \
-    libglib2.0-dev \
-    graphviz \
-    doxygen \
-    help2man \
-    python-docutils \
-    libmagic-dev \
-    tclsh \
-    python-pygments
-
-RUN mkdir -p /root/cyrus
-
-RUN cd /root/cyrus && git clone https://github.com/cyrusimap/cyruslibs.git && cd cyruslibs && ./build.sh
-
-# https://github.com/cyrusimap/cyrus-imapd#how-to-install-cyrus-libraries-from-git-source
-ENV CYRUSLIBS=/usr/local/cyruslibs
-ENV PKG_CONFIG_PATH="$CYRUSLIBS/lib/pkgconfig:$PKG_CONFIG_PATH"
-ENV LDFLAGS="-Wl,-rpath,$CYRUSLIBS/lib -Wl,-rpath,$CYRUSLIBS/lib/x86_64-linux-gnu"
-
-RUN cd /root/cyrus && git clone https://github.com/cyrusimap/cyrus-imapd.git && \
-    cd cyrus-imapd && \
-    git checkout cyrus-imapd-3.1.6 && \
-    autoreconf -i && \
-    ./configure XAPIAN_CONFIG="$CYRUSLIBS/bin/xapian-config-1.5" --enable-http --enable-jmap --enable-xapian --prefix=/usr && \
-    make
-
-FROM debian:stretch
-
-RUN apt-get update && apt-get -y install \
-    gcc \
-    make \
     # syslog (because cyrus won't log to anywhere else)
     syslog-ng
 
-# Copy cyrus folder from builder
-COPY --from=builder /root/cyrus .
-COPY --from=builder /usr/local/cyruslibs /usr/local/cyruslibs
+# Copy cyruslibs folder from builder
+COPY --from=libs-builder /usr/local/cyruslibs /usr/local/cyruslibs
 
 # Install cyrus
-WORKDIR /root
-RUN cd cyrus-imapd && make install
+# https://github.com/cyrusimap/cyrus-imapd#how-to-install-cyrus-libraries-from-git-source
+# https://cyrusimap.org/imap/developer/install-xapian.html
+ENV CYRUSLIBS=/usr/local/cyruslibs
+ENV PKG_CONFIG_PATH="$CYRUSLIBS/lib/pkgconfig:$PKG_CONFIG_PATH"
+ENV LDFLAGS="-Wl,-rpath,$CYRUSLIBS/lib -Wl,-rpath,$CYRUSLIBS/lib/x86_64-linux-gnu"
+ENV XAPIAN_CONFIG="$CYRUSLIBS/bin/xapian-config-1.5"
 
-# # Install multirun https://nicolas-van.github.io/multirun/
-# ADD https://github.com/nicolas-van/multirun/releases/download/0.3.0/multirun-ubuntu-0.3.0.tar.gz /root
-# RUN cd /root && \
-#     tar -zxvf multirun-ubuntu-0.3.0.tar.gz && \
-#     mv multirun /bin && \
-#     rm multirun-ubuntu-0.3.0.tar.graphviz
+# RUN chown root:root /usr/local/cyruslibs
 
-# RUN useradd -c "Cyrus IMAP Server" -d /var/lib/cyrus -g mail -s /bin/bash -r cyrus
+RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrusimap/cyrus-imapd.git
 
-# # User cyrus has to be member of `sasl` group
-# RUN groupadd -fr sasl && usermod -aG sasl cyrus
+RUN useradd -c "Cyrus IMAP Server" -d /var/lib/cyrus -g mail -s /bin/bash -r cyrus
 
-# # for root CAs (?)
-# # RUN usermod -aG ssl-cert cyrus
+RUN cd /root/cyrus/cyrus-imapd && \
+    git checkout cyrus-imapd-3.1.6 && \
+    autoreconf -i && \
+    ./configure \
+        --includedir=/usr/include \
+        --datadir=/usr/share/cyrus \
+        --sharedstatedir=/usr/share/cyrus \
+        --localstatedir=/var/lib/cyrus \
+        --libexecdir=/usr/lib/cyrus/bin \
+        --bindir=/usr/lib/cyrus/bin \
+        --sbindir=/usr/lib/cyrus/bin \
+        --prefix=/usr/lib/cyrus \
+        --disable-silent-rules \
+        --enable-autocreate \
+        --enable-idled \
+        --enable-jmap \
+        --enable-nntp \
+        --enable-murder \
+        --enable-http \
+        --enable-replication \
+        --enable-xapian \
+        --enable-backup \
+        --enable-calalarmd \
+        --enable-unit-tests \
+        --enable-gssapi="/usr" \
+        --with-cyrus-user=cyrus --with-cyrus-group=mail \
+        --with-lock=fcntl \
+        --with-ldap \
+        --with-krb \
+        --with-krbimpl=mit \
+        --without-krbdes \
+        --with-openssl \
+        --with-zlib \
+        --with-libcap \
+        --with-pidfile=/run/cyrus-master.pid \
+        --with-com_err="" \
+        --with-syslogfacility=MAIL \
+        --with-gss_impl=mit \
+        --with-sasl \
+        --with-perl=/usr/bin/perl \
+        --with-snmp && \
+    make && \
+    make install
 
-# # Copy config files (TODO: make dynamic for k8s?)
-# # COPY ./conf/pam-imap /etc/pam.d/imap
-# # COPY ./conf/pam-mysql.conf /etc/pam-mysql.conf
-# COPY ./conf/cyrus.conf /etc/cyrus.conf
-# COPY ./conf/imapd.conf /etc/imapd.conf
-# COPY ./conf/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
+# Install multirun https://nicolas-van.github.io/multirun/
+ADD https://github.com/nicolas-van/multirun/releases/download/0.3.0/multirun-ubuntu-0.3.0.tar.gz /root
+RUN cd /root && \
+    tar -zxvf multirun-ubuntu-0.3.0.tar.gz && \
+    mv multirun /bin && \
+    rm multirun-ubuntu-0.3.0.tar.gz
 
-# # Add cyrus services (https://www.cyrusimap.org/imap/installing.html#protocol-ports)
-# RUN echo '\n# Services used for cyrus\n\
-# httpcyrus 8080/tcp # Cyrus HTTP API\n\
-# lmtp      2003/tcp # Lightweight Mail Transport Protocol service\n\
-# smmap     2004/tcp # Cyrus smmapd (quota check) service\n\
-# csync     2005/tcp # Cyrus replication service\n\
-# mupdate   3905/tcp # Cyrus mupdate service\n\
-# sieve     4190/tcp # timsieved Sieve Mail Filtering Language service' >> /etc/services
+# User cyrus has to be member of `sasl` group
+RUN groupadd -fr sasl && usermod -aG sasl cyrus
 
-# # Prepare directories
-# RUN mkdir -p /var/lib/cyrus /var/spool/cyrus && \
-#     chown -R cyrus:mail /var/lib/cyrus /var/spool/cyrus && \
-#     chmod 750 /var/lib/cyrus /var/spool/cyrus
+# for root CAs (?)
+# RUN usermod -aG ssl-cert cyrus
 
-# # https://www.cyrusimap.org/imap/reference/manpages/systemcommands/mkimap.html
-# RUN cd /root/cyrus/cyrus-imapd && sudo -u cyrus ./tools/mkimap
+# Copy config files (TODO: make dynamic for k8s?)
+COPY ./conf/cyrus.conf /etc/cyrus.conf
+COPY ./conf/imapd.conf /etc/imapd.conf
+COPY ./conf/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 
-# # https://www.cyrusimap.org/imap/installing.html#prepare-ephemeral-run-time-storage-directories
-# RUN mkdir -p /run/cyrus /run/cyrus/socket && \
-#     dpkg-statoverride --add cyrus mail 755 /run/cyrus && \
-#     dpkg-statoverride --add cyrus mail 750 /run/cyrus/socket && \
-#     chown -h cyrus:mail /run/cyrus && \
-#     chmod 755 /run/cyrus && \
-#     chown -h cyrus:mail /run/cyrus/socket && \
-#     chmod 750 /run/cyrus/socket
+# Add cyrus services (https://www.cyrusimap.org/imap/installing.html#protocol-ports)
+RUN echo '\n# Services used for cyrus\n\
+httpcyrus 8080/tcp # Cyrus HTTP API\n\
+lmtp      2003/tcp # Lightweight Mail Transport Protocol service\n\
+smmap     2004/tcp # Cyrus smmapd (quota check) service\n\
+csync     2005/tcp # Cyrus replication service\n\
+mupdate   3905/tcp # Cyrus mupdate service\n\
+sieve     4190/tcp # timsieved Sieve Mail Filtering Language service' >> /etc/services
 
-# COPY ./entrypoint.sh /root/cyrus/entrypoint.sh
+# Prepare directories
+RUN mkdir -p /var/lib/cyrus /var/spool/cyrus && \
+    chown -R cyrus:mail /var/lib/cyrus /var/spool/cyrus && \
+    chmod 750 /var/lib/cyrus /var/spool/cyrus
 
-# ENTRYPOINT /root/cyrus/entrypoint.sh
+# https://www.cyrusimap.org/imap/reference/manpages/systemcommands/mkimap.html
+RUN cd /root/cyrus/cyrus-imapd && sudo -u cyrus ./tools/mkimap
 
-# # pop3 imap imaps pop3s kpop lmtp smmap csync mupdate sieve http
-# EXPOSE 110 143 993 995 1109 2003 2004 2005 3905 4190 8080
+# https://www.cyrusimap.org/imap/installing.html#prepare-ephemeral-run-time-storage-directories
+RUN mkdir -p /run/cyrus /run/cyrus/socket && \
+    dpkg-statoverride --add cyrus mail 755 /run/cyrus && \
+    dpkg-statoverride --add cyrus mail 750 /run/cyrus/socket && \
+    chown -h cyrus:mail /run/cyrus && \
+    chmod 755 /run/cyrus && \
+    chown -h cyrus:mail /run/cyrus/socket && \
+    chmod 750 /run/cyrus/socket
+
+COPY ./entrypoint.sh /root/cyrus/entrypoint.sh
+
+ENTRYPOINT /root/cyrus/entrypoint.sh
+
+# pop3 imap imaps pop3s kpop lmtp smmap csync mupdate sieve http
+EXPOSE 110 143 993 995 1109 2003 2004 2005 3905 4190 8080
