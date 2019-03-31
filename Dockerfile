@@ -1,6 +1,4 @@
-# TODO: Use multistage-build https://docs.docker.com/develop/develop-images/multistage-build/
-
-FROM debian:stretch
+FROM debian:stretch as builder
 
 RUN apt-get update && apt-get -y install \
     # Cyrus dependencies and build tools
@@ -22,11 +20,11 @@ RUN apt-get update && apt-get -y install \
     xxd \
     # For virus scan support
     libclamav-dev \
-    # SASL
-    libsasl2-2 \
-    sasl2-bin \
-    libsasl2-modules \
-    libpam-mysql \
+    # # SASL
+    # libsasl2-2 \
+    # sasl2-bin \
+    # libsasl2-modules \
+    # libpam-mysql \
     # For building the cyrus libs
     check \
     texinfo \
@@ -38,16 +36,7 @@ RUN apt-get update && apt-get -y install \
     python-docutils \
     libmagic-dev \
     tclsh \
-    python-pygments \
-    # syslog (because cyrus won't log to anywhere else)
-    syslog-ng
-
-# Install multirun https://nicolas-van.github.io/multirun/
-ADD https://github.com/nicolas-van/multirun/releases/download/0.3.0/multirun-ubuntu-0.3.0.tar.gz /root
-RUN cd /root && \
-    tar -zxvf multirun-ubuntu-0.3.0.tar.gz && \
-    mv multirun /bin && \
-    rm multirun-ubuntu-0.3.0.tar.gz
+    python-pygments
 
 RUN mkdir -p /root/cyrus
 
@@ -63,52 +52,75 @@ RUN cd /root/cyrus && git clone https://github.com/cyrusimap/cyrus-imapd.git && 
     git checkout cyrus-imapd-3.1.6 && \
     autoreconf -i && \
     ./configure XAPIAN_CONFIG="$CYRUSLIBS/bin/xapian-config-1.5" --enable-http --enable-jmap --enable-xapian --prefix=/usr && \
-    make && \
-    make install
+    make
 
-RUN useradd -c "Cyrus IMAP Server" -d /var/lib/cyrus -g mail -s /bin/bash -r cyrus
+FROM debian:stretch
 
-# User cyrus has to be member of `sasl` group
-RUN groupadd -fr sasl && usermod -aG sasl cyrus
+RUN apt-get update && apt-get -y install \
+    gcc \
+    make \
+    # syslog (because cyrus won't log to anywhere else)
+    syslog-ng
 
-# for root CAs (?)
-# RUN usermod -aG ssl-cert cyrus
+# Copy cyrus folder from builder
+COPY --from=builder /root/cyrus .
+COPY --from=builder /usr/local/cyruslibs /usr/local/cyruslibs
 
-# Copy config files (TODO: make dynamic for k8s?)
-COPY ./conf/pam-imap /etc/pam.d/imap
-COPY ./conf/pam-mysql.conf /etc/pam-mysql.conf
-COPY ./conf/cyrus.conf /etc/cyrus.conf
-COPY ./conf/imapd.conf /etc/imapd.conf
-COPY ./conf/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
+# Install cyrus
+WORKDIR /root
+RUN cd cyrus-imapd && make install
 
-# Add cyrus services (https://www.cyrusimap.org/imap/installing.html#protocol-ports)
-RUN echo '\n# Services used for cyrus\n\
-httpcyrus 8080/tcp # Cyrus HTTP API\n\
-lmtp      2003/tcp # Lightweight Mail Transport Protocol service\n\
-smmap     2004/tcp # Cyrus smmapd (quota check) service\n\
-csync     2005/tcp # Cyrus replication service\n\
-mupdate   3905/tcp # Cyrus mupdate service\n\
-sieve     4190/tcp # timsieved Sieve Mail Filtering Language service' >> /etc/services
+# # Install multirun https://nicolas-van.github.io/multirun/
+# ADD https://github.com/nicolas-van/multirun/releases/download/0.3.0/multirun-ubuntu-0.3.0.tar.gz /root
+# RUN cd /root && \
+#     tar -zxvf multirun-ubuntu-0.3.0.tar.gz && \
+#     mv multirun /bin && \
+#     rm multirun-ubuntu-0.3.0.tar.graphviz
 
-# Prepare directories
-RUN mkdir -p /var/lib/cyrus /var/spool/cyrus && \
-    chown -R cyrus:mail /var/lib/cyrus /var/spool/cyrus && \
-    chmod 750 /var/lib/cyrus /var/spool/cyrus
+# RUN useradd -c "Cyrus IMAP Server" -d /var/lib/cyrus -g mail -s /bin/bash -r cyrus
 
-RUN cd /root/cyrus/cyrus-imapd && sudo -u cyrus ./tools/mkimap
+# # User cyrus has to be member of `sasl` group
+# RUN groupadd -fr sasl && usermod -aG sasl cyrus
 
-# https://www.cyrusimap.org/imap/installing.html#prepare-ephemeral-run-time-storage-directories
-RUN mkdir -p /run/cyrus /run/cyrus/socket && \
-    dpkg-statoverride --add cyrus mail 755 /run/cyrus && \
-    dpkg-statoverride --add cyrus mail 750 /run/cyrus/socket && \
-    chown -h cyrus:mail /run/cyrus && \
-    chmod 755 /run/cyrus && \
-    chown -h cyrus:mail /run/cyrus/socket && \
-    chmod 750 /run/cyrus/socket
+# # for root CAs (?)
+# # RUN usermod -aG ssl-cert cyrus
 
-COPY ./entrypoint.sh /root/cyrus/entrypoint.sh
+# # Copy config files (TODO: make dynamic for k8s?)
+# # COPY ./conf/pam-imap /etc/pam.d/imap
+# # COPY ./conf/pam-mysql.conf /etc/pam-mysql.conf
+# COPY ./conf/cyrus.conf /etc/cyrus.conf
+# COPY ./conf/imapd.conf /etc/imapd.conf
+# COPY ./conf/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 
-ENTRYPOINT /root/cyrus/entrypoint.sh
+# # Add cyrus services (https://www.cyrusimap.org/imap/installing.html#protocol-ports)
+# RUN echo '\n# Services used for cyrus\n\
+# httpcyrus 8080/tcp # Cyrus HTTP API\n\
+# lmtp      2003/tcp # Lightweight Mail Transport Protocol service\n\
+# smmap     2004/tcp # Cyrus smmapd (quota check) service\n\
+# csync     2005/tcp # Cyrus replication service\n\
+# mupdate   3905/tcp # Cyrus mupdate service\n\
+# sieve     4190/tcp # timsieved Sieve Mail Filtering Language service' >> /etc/services
 
-# pop3 imap imaps pop3s kpop lmtp smmap csync mupdate sieve http
-EXPOSE 110 143 993 995 1109 2003 2004 2005 3905 4190 8080
+# # Prepare directories
+# RUN mkdir -p /var/lib/cyrus /var/spool/cyrus && \
+#     chown -R cyrus:mail /var/lib/cyrus /var/spool/cyrus && \
+#     chmod 750 /var/lib/cyrus /var/spool/cyrus
+
+# # https://www.cyrusimap.org/imap/reference/manpages/systemcommands/mkimap.html
+# RUN cd /root/cyrus/cyrus-imapd && sudo -u cyrus ./tools/mkimap
+
+# # https://www.cyrusimap.org/imap/installing.html#prepare-ephemeral-run-time-storage-directories
+# RUN mkdir -p /run/cyrus /run/cyrus/socket && \
+#     dpkg-statoverride --add cyrus mail 755 /run/cyrus && \
+#     dpkg-statoverride --add cyrus mail 750 /run/cyrus/socket && \
+#     chown -h cyrus:mail /run/cyrus && \
+#     chmod 755 /run/cyrus && \
+#     chown -h cyrus:mail /run/cyrus/socket && \
+#     chmod 750 /run/cyrus/socket
+
+# COPY ./entrypoint.sh /root/cyrus/entrypoint.sh
+
+# ENTRYPOINT /root/cyrus/entrypoint.sh
+
+# # pop3 imap imaps pop3s kpop lmtp smmap csync mupdate sieve http
+# EXPOSE 110 143 993 995 1109 2003 2004 2005 3905 4190 8080
