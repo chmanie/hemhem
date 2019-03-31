@@ -1,6 +1,0 @@
-#%PAM-1.0
-
-auth       required     pam_nologin.so
-auth       sufficient   pam_mysql.so config_file=/etc/pam-mysql.conf
-account    sufficient   pam_mysql.so config_file=/etc/pam-mysql.conf
-password   required     pam_deny.so

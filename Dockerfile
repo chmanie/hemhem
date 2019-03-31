@@ -2,29 +2,9 @@
 FROM debian:buster
 
 RUN apt-get update && apt-get -y install \
-  # TODO DEBUG STUFF
-  # rsyslog \
-  procps \
-  vim \
-  telnet \
-  sudo \
-  # DEBUG STUFF END
   postfix \
-  postfix-mysql \
-  libsasl2-2 \
-  sasl2-bin \
-  libsasl2-modules \
-  libpam-mysql
+  postfix-mysql
 
-# Install multirun https://nicolas-van.github.io/multirun/
-ADD https://github.com/nicolas-van/multirun/releases/download/0.3.0/multirun-ubuntu-0.3.0.tar.gz /root
-RUN cd /root && \
-    tar -zxvf multirun-ubuntu-0.3.0.tar.gz && \
-    mv multirun /bin && \
-    rm multirun-ubuntu-0.3.0.tar.gz
-
-COPY ./conf/pam-smtp /etc/pam.d/smtp
-COPY ./conf/pam-mysql.conf /etc/pam-mysql.conf
 COPY ./conf/main.cf /etc/postfix/main.cf
 COPY ./conf/master.cf /etc/postfix/master.cf
 COPY ./conf/smtpd.conf /etc/postfix/sasl/smtpd.conf
@@ -36,12 +16,12 @@ COPY ./conf/saslauthd /etc/default/saslauthd
 
 COPY ./entrypoint.sh /root/entrypoint.sh
 
-# User postfix has to be member of `sasl` group
-RUN groupadd -fr sasl && usermod -aG sasl postfix && \
 # Only postfix user should have access to mysql map files (passwords are in there!)
-    chmod 640 /etc/postfix/mysql-*.cf && \
+RUN chmod 640 /etc/postfix/mysql-*.cf && \
     chgrp postfix /etc/postfix/mysql-*.cf && \
+    # User postfix has to be member of `sasl` group
+    groupadd -fr sasl && usermod -aG sasl postfix
 # https://wiki.debian.org/PostfixAndSASL#Implementation_using_Cyrus_SASL
-    dpkg-statoverride --add root sasl 710 /var/spool/postfix/var/run/saslauthd
+    # dpkg-statoverride --add root sasl 710 /var/spool/postfix/var/run/saslauthd
 
 ENTRYPOINT /root/entrypoint.sh
