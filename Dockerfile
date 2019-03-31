@@ -25,3 +25,5 @@ RUN chmod 640 /etc/postfix/mysql-*.cf && \
     # dpkg-statoverride --add root sasl 710 /var/spool/postfix/var/run/saslauthd
 
 ENTRYPOINT /root/entrypoint.sh
+
+EXPOSE 25
