@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+
+/usr/lib/cyrus/bin/master -D

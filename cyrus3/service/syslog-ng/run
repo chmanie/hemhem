@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+
+/usr/sbin/syslog-ng -p /var/run/syslog-ng.pid -F

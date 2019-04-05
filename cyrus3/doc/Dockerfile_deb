@@ -33,6 +33,8 @@ RUN apt-get update && apt-get -y install \
 
 RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrusimap/cyruslibs.git
 
+COPY build/cre2_include_stdint_headers.patch /root/cyrus/cyruslibs/cre2
+
 RUN cd /root/cyrus/cyruslibs && ./build.sh
 
 FROM debian:stretch

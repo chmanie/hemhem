@@ -1,0 +1,42 @@
+From 1c3f48af7ae8240721b09679e893f97f14e63479 Mon Sep 17 00:00:00 2001
+From: Christian Maniewski <code@chmanie.com>
+Date: Fri, 5 Apr 2019 16:21:23 +0000
+Subject: [PATCH] Quick fix for missing qsort_r function
+
+---
+ imap/jmap_mailbox.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/imap/jmap_mailbox.c b/imap/jmap_mailbox.c
+index 806815db0..8d3e9cf9d 100644
+--- a/imap/jmap_mailbox.c
++++ b/imap/jmap_mailbox.c
+@@ -133,6 +133,17 @@ enum shared_mbox_type {
+     _SHAREDMBOX_SHARED
+ };
+
++static void cyr_qsort_r(void *base, size_t nmemb, size_t size,
++                        int (*compar)(const void *, const void *, void *),
++                        void *thunk)
++{
++    int compar_func(const void *a, const void *b)
++    {
++        return compar(a, b, thunk);
++    }
++    qsort(base, nmemb, size, compar_func);
++}
++
+ static int _shared_mboxes_cb(const mbentry_t *mbentry, void *rock)
+ {
+     struct shared_mboxes *sm = rock;
+@@ -1159,7 +1170,7 @@ static int _mboxquery_run(mboxquery_t *query)
+     if (r) goto done;
+
+     /* Sort result */
+-    qsort_r(query->result.data, query->result.count, sizeof(void*),
++    cyr_qsort_r(query->result.data, query->result.count, sizeof(void*),
+             (int(*)(const void*, const void*, void*)) _mboxquery_compar,
+             &query->sort);
+
+--
+2.20.1

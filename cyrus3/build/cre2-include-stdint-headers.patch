@@ -1,0 +1,25 @@
+From d1074223b6efc6fcb47ef06e99620e510d1db79b Mon Sep 17 00:00:00 2001
+From: Christian Maniewski <code@chmanie.com>
+Date: Fri, 5 Apr 2019 10:08:47 +0000
+Subject: [PATCH] Add <stdint.h> include statement
+Fixes an issue in src/cre2.h "error: unknown type name 'int64_t'"
+
+---
+ src/cre2.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/cre2.h b/src/cre2.h
+index faf2a7b..e535f84 100644
+--- a/src/cre2.h
++++ b/src/cre2.h
+@@ -17,6 +17,8 @@
+  ** Headers.
+  ** ----------------------------------------------------------------- */
+
++#include <stdint.h>
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+--
+2.20.1
