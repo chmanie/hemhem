@@ -1,0 +1,8 @@
+user=mail
+password=mailPASSWORD
+dbname=maildb
+table=domains
+select_field=domain
+where_field=domain
+hosts=mysql
+additional_conditions = and enabled = 1
