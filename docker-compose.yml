@@ -1,0 +1,33 @@
+version: "3"
+services:
+  saslauthd:
+    image: "saslauthd-mysql:latest"
+    volumes:
+      - saslsocket:/var/run/saslauthd
+  cyrus:
+    depends_on:
+      - saslauthd
+    image: "cyrus-imapd-3.1.6-jmap:latest"
+    ports:
+      - "143:143"
+    volumes:
+      - saslsocket:/var/run/saslauthd
+  postfix:
+    depends_on:
+      - saslauthd
+    image: "postfix:latest"
+    ports:
+      - "8000:25"
+    volumes:
+      - saslsocket:/var/run/saslauthd
+  mysql:
+    image: "mariadb/server"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    environment:
+      - MARIADB_ROOT_PASSWORD=CHANGEME
+    ports:
+      - "3306:3306"
+
+volumes:
+  saslsocket:
