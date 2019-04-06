@@ -1,44 +1,47 @@
-# We want postfix 3.4 so buster it is
-FROM debian:buster
+FROM alpine:latest
 
-RUN apt-get update && apt-get -y install \
+RUN apk update && apk add --no-cache \
+  bash \
   postfix \
-  postfix-mysql
+  postfix-mysql \
+  cyrus-sasl \
+  cyrus-sasl-plain \
+  # TODO use syslog-ng like in cyrus
+  rsyslog \
+  runit \
+  --repository http://dl-cdn.alpinelinux.org/alpine/edge/main
 
-COPY ./conf/main.cf /etc/postfix/main.cf
-COPY ./conf/master.cf /etc/postfix/master.cf
-COPY ./conf/smtpd.conf /etc/postfix/sasl/smtpd.conf
-COPY ./conf/mysql_mailbox.cf /etc/postfix/mysql_mailbox.cf
-COPY ./conf/mysql_alias.cf /etc/postfix/mysql_alias.cf
-COPY ./conf/mysql_domains.cf /etc/postfix/mysql_domains.cf
+# DEBUG TODO remove
+RUN apk add --no-cache \
+  vim \
+  net-tools \
+  procps \
+  busybox-extras
 
-COPY ./entrypoint.sh /root/entrypoint.sh
+COPY conf/main.cf /etc/postfix/main.cf
+# COPY conf/master.cf /etc/postfix/master.cf
+COPY conf/smtpd.conf /etc/sasl2/smtpd.conf
+COPY conf/mysql_mailbox.cf /etc/postfix/mysql_mailbox.cf
+COPY conf/mysql_alias.cf /etc/postfix/mysql_alias.cf
+COPY conf/mysql_domains.cf /etc/postfix/mysql_domains.cf
+COPY conf/rsyslog.conf /etc/rsyslog.conf
 
-# Set up directories and users
-# http://flurdy.com/docs/postfix/#config-simple-mta
-# Only postfix user should have access to mysql map files (passwords are in there!)
+COPY runit_bootstrap /usr/sbin/runit_bootstrap
+COPY service /etc/service
+
 RUN chmod 640 /etc/postfix/mysql_*.cf && \
     chgrp postfix /etc/postfix/mysql_*.cf && \
     # User postfix has to be member of `sasl` group
-    groupadd -fr sasl && usermod -aG sasl postfix && \
-    echo 'mail.example.org' > /etc/mailname && \
-    cp /etc/aliases /etc/postfix/aliases && \
-    postalias /etc/postfix/aliases && \
-    mkdir /var/spool/mail/virtual && \
-    groupadd --system virtual -g 5000 && \
-    useradd --system virtual -u 5000 -g 5000 && \
+    addgroup -S sasl && adduser postfix sasl && \
+    mkdir -p /var/spool/mail/virtual && \
+    addgroup -S -g 5000 virtual && \
+    adduser -S -g 5000 virtual virtual && \
     chown -R virtual:virtual /var/spool/mail/virtual
 
-# DEBUG
-RUN apt-get update && apt-get -y install \
-    # TODO make sure everything is logged to stdout, it's not the case right now
-    rsyslog \
-    mailutils \
-    vim \
-    net-tools \
-    procps \
-    telnet
+RUN ln -sf /dev/stdout /var/log/mail.log
 
-ENTRYPOINT /root/entrypoint.sh
+STOPSIGNAL SIGKILL
 
 EXPOSE 25
+
+ENTRYPOINT ["/usr/sbin/runit_bootstrap"]
