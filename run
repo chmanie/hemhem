@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+exec rsyslogd -n &
+
+saslauthd -a pam -c -r -m /var/run/saslauthd -d
