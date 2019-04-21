@@ -15,7 +15,7 @@ services:
   postfix:
     depends_on:
       - saslauthd
-    image: "postfix:latest"
+    image: "postfix3:latest"
     ports:
       - "8000:25"
     volumes:

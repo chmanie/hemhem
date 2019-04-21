@@ -1,8 +1,0 @@
-user=mail
-password=mailPASSWORD
-dbname=maildb
-table=users
-select_field=maildir
-where_field=id
-hosts=mysql
-additional_conditions = and enabled = 1

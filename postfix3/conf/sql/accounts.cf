@@ -1,0 +1,5 @@
+user = vmail
+password = vmaildbpass
+hosts = mysql
+dbname = vmail
+query = select 1 as found from accounts where email = '%s' and enabled = true LIMIT 1;
