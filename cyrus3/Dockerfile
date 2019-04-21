@@ -104,12 +104,12 @@ ENV XAPIAN_CONFIG="$CYRUSLIBS/bin/xapian-config-1.5"
 # Clone cyrus-imapd
 RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrusimap/cyrus-imapd.git
 
-COPY build/cyrus-imapd-qsort_r-fix.patch /root/cyrus/cyrus-imapd
+# COPY build/cyrus-imapd-qsort_r-fix.patch /root/cyrus/cyrus-imapd
 
 # Patch & make & install cyrus-imapd
 RUN cd /root/cyrus/cyrus-imapd && \
-    git checkout cyrus-imapd-3.1.6 && \
-    patch -p1 -i cyrus-imapd-qsort_r-fix.patch && \
+    # git checkout cyrus-imapd-3.1.6 && \
+    # patch -p1 -i cyrus-imapd-qsort_r-fix.patch && \
     autoreconf -i && \
     ./configure \
         --includedir=/usr/include \

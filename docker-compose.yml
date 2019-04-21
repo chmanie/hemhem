@@ -7,7 +7,7 @@ services:
   cyrus:
     depends_on:
       - saslauthd
-    image: "cyrus-imapd-3.1.6-jmap:latest"
+    image: "cyrus3:latest"
     ports:
       - "143:143"
     volumes:
