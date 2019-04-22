@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+MYSQL_MAIL_USER=${MYSQL_MAIL_USER:-vmail}
+MYSQL_MAIL_PASSWORD=${MYSQL_MAIL_PASSWORD:-vmail}
+MYSQL_HOST=${MYSQL_HOST:-mysql}
+MYSQL_MAIL_DB_NAME=${MYSQL_MAIL_DB_NAME:-vmail}
+
+sed -i s/{MYSQL_MAIL_USER}/${MYSQL_MAIL_USER}/ /etc/pam-mysql.conf
+sed -i s/{MYSQL_MAIL_PASSWORD}/${MYSQL_MAIL_PASSWORD}/ /etc/pam-mysql.conf
+sed -i s/{MYSQL_HOST}/${MYSQL_HOST}/ /etc/pam-mysql.conf
+sed -i s/{MYSQL_MAIL_DB_NAME}/${MYSQL_MAIL_DB_NAME}/ /etc/pam-mysql.conf
+
 exec rsyslogd -n &
 
 saslauthd -a pam -c -r -m /var/run/saslauthd -d
