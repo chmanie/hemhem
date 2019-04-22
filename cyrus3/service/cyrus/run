@@ -1,4 +1,10 @@
 #!/bin/bash
 set -e
 
+# Accounts that can administrate the cyrus daemon (space separated)
+CYRUS_ADMIN_ACCOUNTS="${CYRUS_ADMIN_ACCOUNTS:-postmaster@localhost}"
+
+sed -i s/{CYRUS_ADMIN_ACCOUNTS}/$CYRUS_ADMIN_ACCOUNTS/ /etc/imapd.conf
+
+
 /usr/lib/cyrus/bin/master -D
