@@ -6,10 +6,10 @@ compatibility_level = 2
 
 ## Directories
 queue_directory = /var/spool/postfix
-command_directory = /usr/sbin
-daemon_directory = /usr/libexec/postfix
 data_directory = /var/lib/postfix
 mail_spool_directory = /var/spool/mail
+command_directory = /usr/sbin
+daemon_directory = /usr/libexec/postfix
 
 ## Sensible Alpine defaults
 mail_owner = postfix
@@ -296,18 +296,15 @@ smtpd_hard_error_limit = 12
 mynetworks = 127.0.0.0/8 [::1]/128 [fe80::]/64
 mynetworks_style = host
 inet_interfaces = all 
-#TODO-ENV
-myhostname = mail.waswiegentiere.de 
-#TODO-ENV
-myorigin = waswiegentiere.de 
+myhostname = {POSTFIX_MY_HOSTNAME} 
+myorigin = {POSTFIX_MY_ORIGIN} 
 inet_protocols = all
 # No relay
 relayhost =
 
 ## Mail delivery settings
 # Mail delivery via docker cyrus
-#TODO-ENV cyrus host and port (?)
-virtual_transport = lmtp:inet:cyrus:2003
+virtual_transport = lmtp:inet:{CYRUS_HOST}
 
 # https://github.com/jessfraz/dockerfiles/blob/master/postfix/service/postfix/run#L4
 smtputf8_enable = no

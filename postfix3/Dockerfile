@@ -38,9 +38,7 @@ RUN chmod 640 /etc/postfix/sql/*.cf && \
     mkdir -p /var/spool/mail/virtual && \
     addgroup -S -g 5000 virtual && \
     adduser -S -g 5000 virtual virtual && \
-    chown -R virtual:virtual /var/spool/mail/virtual && \
-    touch /etc/aliases && \
-    newaliases
+    chown -R virtual:virtual /var/spool/mail/virtual
 
 RUN ln -sf /dev/stdout /var/log/mail.log
 

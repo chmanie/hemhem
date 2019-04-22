@@ -1,5 +1,5 @@
-user = vmail
-password = vmaildbpass
-hosts = mysql
-dbname = vmail
+user = {MYSQL_MAIL_USER}
+password = {MYSQL_MAIL_PASSWORD}
+hosts = {MYSQL_HOST}
+dbname = {MYSQL_MAIL_DB_NAME}
 query = SELECT domain FROM domains WHERE domain = '%s'
