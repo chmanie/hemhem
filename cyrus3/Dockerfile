@@ -65,6 +65,7 @@ RUN apk update && apk add --no-cache \
       # Required (I guess?)
       libxml2-dev \
       cyrus-sasl-dev \
+      cyrus-sasl-plain \
       sqlite-dev \
       perl-dev \
       pcre-dev \
