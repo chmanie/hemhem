@@ -43,8 +43,8 @@ CREATE TABLE `tlspolicies` (
     UNIQUE KEY (`domain`)
 );
 
-insert into domains (domain) values ('konfetti.xyz');
+insert into domains (domain) values ('waswiegentiere.de');
 
-insert into accounts (email, password, quota, enabled, sendonly) values ('chris@konfetti.xyz', encrypt('password', CONCAT('$5$', MD5(RAND()))), 2048, true, false);
+insert into accounts (email, password, quota, enabled, sendonly) values ('chris@waswiegentiere.de', encrypt('password', CONCAT('$5$', MD5(RAND()))), 2048, true, false);
 
-insert into aliases (source, destination, enabled) values ('alias@konfetti.xyz', 'chris@konfetti.xyz', true);
+insert into aliases (source, destination, enabled) values ('alias@waswiegentiere.de', 'chris@waswiegentiere.de', true);

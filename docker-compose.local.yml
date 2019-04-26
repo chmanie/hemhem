@@ -1,12 +1,16 @@
 version: "3"
 services:
+  adminer:
+    image: "adminer:latest"
+    ports:
+      - "8080:8080"
   saslauthd:
     environment:
       - MYSQL_MAIL_USER=vmail
       - MYSQL_MAIL_PASSWORD=vmaildbpass
       - MYSQL_MAIL_DB_NAME=vmail
       - MYSQL_HOST=mysql
-    image: "chmanie/hemhem-saslauthd:latest"
+    image: "saslauthd-deb:latest"
     volumes:
       # Mount socket that is shared with postfix and cyrus containers
       - saslsocket:/var/run/saslauthd
@@ -15,16 +19,16 @@ services:
       - saslauthd
     environment:
       - CYRUS_ADMIN_ACCOUNTS=chris@waswiegentiere.de
-    image: "chmanie/hemhem-cyrus:latest"
+    image: "cyrus3debnew:latest"
     ports:
       - "143:143"
     volumes:
       # Partition to use for mail data (slow)
-      - cyrus-maildata:/var/spool/cyrus/mail
+      # - cyrus-maildata:/var/spool/cyrus/mail
       # Put your sieve scripts here:
-      - sieve-scripts:/var/spool/sieve
+      # - sieve-scripts:/var/spool/sieve
       # Partition to use for search index data (fast)
-      - cyrus-searchdata:/var/cyrus/search
+      # - cyrus-searchdata:/var/cyrus/search
       # Mount socket that is shared with postfix and saslauthd containers
       - saslsocket:/var/run/saslauthd
   postfix:
@@ -38,7 +42,7 @@ services:
       - POSTFIX_MY_HOSTNAME=mail.waswiegentiere.de
       - POSTFIX_MY_ORIGIN=waswiegentiere.de
       - CYRUS_HOST=cyrus:2003
-    image: "chmanie/hemhem-postfix:latest"
+    image: "postfix3:latest"
     ports:
       - "25:25"
     volumes:
@@ -50,9 +54,11 @@ services:
   mysql:
     image: "mariadb/server"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - ./data:/var/lib/mysql
     environment:
-      - MARIADB_ROOT_PASSWORD=123CHANGEME
+      MYSQL_ROOT_PASSWORD: 123CHANGEME
+      MARIADB_ROOT_PASSWOR: 123CHANGEME
+      # - MARIADB_ROOT_PASSWORD=123CHANGEME
     ports:
       - "3306:3306"
 

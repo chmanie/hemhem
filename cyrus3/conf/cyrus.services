@@ -1,7 +1,0 @@
-
-# Services used for cyrus
-httpcyrus 8080/tcp # Cyrus HTTP API
-smmap     2004/tcp # Cyrus smmapd (quota check) service
-csync     2005/tcp # Cyrus replication service
-mupdate   3905/tcp # Cyrus mupdate service
-sieve     4190/tcp # timsieved Sieve Mail Filtering Language service

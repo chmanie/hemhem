@@ -6,5 +6,6 @@ CYRUS_ADMIN_ACCOUNTS="${CYRUS_ADMIN_ACCOUNTS:-postmaster@localhost}"
 
 sed -i s/{CYRUS_ADMIN_ACCOUNTS}/$CYRUS_ADMIN_ACCOUNTS/ /etc/imapd.conf
 
+export CYRUS_VERBOSE=100
 
-/usr/lib/cyrus/bin/master -D
+/usr/lib/cyrus/bin/master

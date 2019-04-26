@@ -1,0 +1,18 @@
+FROM debian:sid
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -yq cyrus-imapd cyrus-pop3d cyrus-nntpd cyrus-clients sasl2-bin rsyslog procps vim less
+
+RUN touch /var/lib/cyrus/tls_sessions.db && chown cyrus:mail /var/lib/cyrus/tls_sessions.db
+
+RUN (echo 'cyrus'; echo 'cyrus') | passwd cyrus
+RUN useradd mailtest
+RUN (echo 'mail'; echo 'mail') | passwd mailtest
+
+RUN sed -i s/#admins/admins/ /etc/imapd.conf
+RUN sed -i s/http/#http/ /etc/cyrus.conf
+RUN sed -i s/START=no/START=yes/ /etc/default/saslauthd
+
+CMD service rsyslog start && /usr/sbin/cyrmaster 
+# ENTRYPOINT
