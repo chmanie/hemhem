@@ -1,4 +1,4 @@
-FROM bitnami/minideb:stretch as libs-builder
+FROM bitnami/minideb:buster as libs-builder
 
 RUN install_packages \
     # minideb additions
@@ -6,6 +6,7 @@ RUN install_packages \
     curl \
     # Cyrus lib dependencies and build tools
     git \
+    cmake \
     build-essential \
     autoconf \
     automake \
@@ -23,8 +24,11 @@ RUN install_packages \
     xxd \
     # For building the cyrus libs
     check \
+    tcl \
     texinfo \
-    cmake \
+    libicu-dev \
+    zlib1g \
+    zlib1g-dev \
     libglib2.0-dev \
     graphviz \
     doxygen \
@@ -32,7 +36,8 @@ RUN install_packages \
     python-docutils \
     libmagic-dev \
     tclsh \
-    python-pygments
+    python-pygments \
+    python3-sphinx
 
 RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrusimap/cyruslibs.git
 
@@ -40,14 +45,16 @@ RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrus
 
 RUN cd /root/cyrus/cyruslibs && ./build.sh
 
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:buster
 
 RUN install_packages \
     # minideb additions
     ca-certificates \
     curl \ 
+    rsync \
     # Cyrus dependencies and build tools
     git \
+    libcunit1 \
     build-essential \
     autoconf \
     automake \
@@ -67,6 +74,7 @@ RUN install_packages \
     libnghttp2-dev \
     # For virus scan support
     libclamav-dev \
+    # Run daemons
     runit \
     syslog-ng
 
@@ -121,7 +129,6 @@ RUN cd /root/cyrus/cyrus-imapd && \
       --enable-xapian \
       --enable-backup \
       --enable-calalarmd \
-      --enable-unit-tests \
       --enable-gssapi=/usr \
       --with-cyrus-user=cyrus \
       --with-cyrus-group=mail \
@@ -160,8 +167,6 @@ RUN mkdir -p /var/lib/cyrus /var/spool/cyrus && \
     chown -R cyrus:mail /var/lib/cyrus /var/spool/cyrus && \
     chmod 750 /var/lib/cyrus /var/spool/cyrus
 
-# https://www.cyrusimap.org/imap/reference/manpages/systemcommands/mkimap.html
-RUN cd /root/cyrus/cyrus-imapd && sudo -u cyrus ./tools/mkimap
 
 # https://www.cyrusimap.org/imap/installing.html#prepare-ephemeral-run-time-storage-directories
 RUN mkdir -p /run/cyrus /run/cyrus/socket && \
@@ -175,6 +180,9 @@ RUN mkdir -p /run/cyrus /run/cyrus/socket && \
 # Copy run scripts
 COPY runit_bootstrap /usr/sbin/runit_bootstrap
 COPY service /etc/service
+
+# https://www.cyrusimap.org/imap/reference/manpages/systemcommands/mkimap.html
+RUN cd /root/cyrus/cyrus-imapd && sudo -u cyrus ./tools/mkimap
 
 # Clean up after us
 RUN rm -rf /root/cyrus

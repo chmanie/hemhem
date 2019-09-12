@@ -1,4 +1,4 @@
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:buster
 
 MAINTAINER Christian Maniewski <code@chmanie.com>
 
