@@ -86,7 +86,7 @@ RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrus
 RUN useradd -c "Cyrus IMAP Server" -d /var/lib/cyrus -g mail -s /bin/bash -r cyrus
 
 RUN cd /root/cyrus/cyrus-imapd && \
-    git checkout cyrus-imapd-3.1.6 && \
+    git checkout cyrus-imapd-3.1.7 && \
     autoreconf -i && \
     ./configure \
       --build=x86_64-linux-gnu \
