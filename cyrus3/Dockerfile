@@ -39,7 +39,11 @@ RUN install_packages \
     python-pygments \
     python3-sphinx
 
-RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrusimap/cyruslibs.git
+RUN mkdir -p /root/cyrus && \
+    cd /root/cyrus && \
+    git clone https://github.com/cyrusimap/cyruslibs.git && \
+    cd cyruslibs && \
+    git checkout dd656ed3e104373449f015c3590b0f839efc14ef
 
 # COPY build/cre2_include_stdint_headers.patch /root/cyrus/cyruslibs/cre2
 
@@ -94,7 +98,7 @@ RUN mkdir -p /root/cyrus && cd /root/cyrus && git clone https://github.com/cyrus
 RUN useradd -c "Cyrus IMAP Server" -d /var/lib/cyrus -g mail -s /bin/bash -r cyrus
 
 RUN cd /root/cyrus/cyrus-imapd && \
-    git checkout cyrus-imapd-3.1.7 && \
+    git checkout cyrus-imapd-3.1.9 && \
     autoreconf -i && \
     ./configure \
       --build=x86_64-linux-gnu \
