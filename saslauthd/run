@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
 
-MYSQL_MAIL_USER=${MYSQL_MAIL_USER:-vmail}
-MYSQL_MAIL_PASSWORD=${MYSQL_MAIL_PASSWORD:-vmail}
-MYSQL_HOST=${MYSQL_HOST:-mysql}
-MYSQL_MAIL_DB_NAME=${MYSQL_MAIL_DB_NAME:-vmail}
+DATABASE_MAIL_USER=${DATABASE_MAIL_USER:-vmail}
+DATABASE_MAIL_PASSWORD=${DATABASE_MAIL_PASSWORD:-vmail}
+DATABASE_HOST=${DATABASE_HOST:-mysql}
+DATABASE_MAIL_DB_NAME=${DATABASE_MAIL_DB_NAME:-vmail}
 
-sed -i s/{MYSQL_MAIL_USER}/${MYSQL_MAIL_USER}/ /etc/pam-mysql.conf
-sed -i s/{MYSQL_MAIL_PASSWORD}/${MYSQL_MAIL_PASSWORD}/ /etc/pam-mysql.conf
-sed -i s/{MYSQL_HOST}/${MYSQL_HOST}/ /etc/pam-mysql.conf
-sed -i s/{MYSQL_MAIL_DB_NAME}/${MYSQL_MAIL_DB_NAME}/ /etc/pam-mysql.conf
+sed -i s/{DATABASE_MAIL_USER}/${DATABASE_MAIL_USER}/ /etc/pam-mysql.conf
+sed -i s/{DATABASE_MAIL_PASSWORD}/${DATABASE_MAIL_PASSWORD}/ /etc/pam-mysql.conf
+sed -i s/{DATABASE_HOST}/${DATABASE_HOST}/ /etc/pam-mysql.conf
+sed -i s/{DATABASE_MAIL_DB_NAME}/${DATABASE_MAIL_DB_NAME}/ /etc/pam-mysql.conf
 
 exec rsyslogd -n &
 

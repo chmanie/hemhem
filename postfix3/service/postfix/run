@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
 
-MYSQL_MAIL_USER=${MYSQL_MAIL_USER:-vmail}
-MYSQL_MAIL_PASSWORD=${MYSQL_MAIL_PASSWORD:-vmail}
-MYSQL_HOST=${MYSQL_HOST:-mysql}
-MYSQL_MAIL_DB_NAME=${MYSQL_MAIL_DB_NAME:-vmail}
+DATABASE_MAIL_USER=${DATABASE_MAIL_USER:-vmail}
+DATABASE_MAIL_PASSWORD=${DATABASE_MAIL_PASSWORD:-vmail}
+DATABASE_HOST=${DATABASE_HOST:-mysql}
+DATABASE_MAIL_DB_NAME=${DATABASE_MAIL_DB_NAME:-vmail}
 POSTFIX_MY_HOSTNAME=${POSTFIX_MY_HOSTNAME:-mail.localhost}
 POSTFIX_MY_ORIGIN=${POSTFIX_MY_ORIGIN:-localhost}
 CYRUS_HOST=${CYRUS_HOST:-cyrus:2003}
 
-sed -i s/{MYSQL_MAIL_USER}/${MYSQL_MAIL_USER}/ /etc/postfix/sql/*.cf
-sed -i s/{MYSQL_MAIL_PASSWORD}/${MYSQL_MAIL_PASSWORD}/ /etc/postfix/sql/*.cf
-sed -i s/{MYSQL_HOST}/${MYSQL_HOST}/ /etc/postfix/sql/*.cf
-sed -i s/{MYSQL_MAIL_DB_NAME}/${MYSQL_MAIL_DB_NAME}/ /etc/postfix/sql/*.cf
+sed -i s/{DATABASE_MAIL_USER}/${DATABASE_MAIL_USER}/ /etc/postfix/sql/*.cf
+sed -i s/{DATABASE_MAIL_PASSWORD}/${DATABASE_MAIL_PASSWORD}/ /etc/postfix/sql/*.cf
+sed -i s/{DATABASE_HOST}/${DATABASE_HOST}/ /etc/postfix/sql/*.cf
+sed -i s/{DATABASE_MAIL_DB_NAME}/${DATABASE_MAIL_DB_NAME}/ /etc/postfix/sql/*.cf
 
 sed -i s/{POSTFIX_MY_HOSTNAME}/${POSTFIX_MY_HOSTNAME}/ /etc/postfix/main.cf
 sed -i s/{POSTFIX_MY_ORIGIN}/${POSTFIX_MY_ORIGIN}/ /etc/postfix/main.cf

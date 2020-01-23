@@ -1,5 +1,5 @@
-user = {MYSQL_MAIL_USER}
-password = {MYSQL_MAIL_PASSWORD}
-hosts = {MYSQL_HOST}
-dbname = {MYSQL_MAIL_DB_NAME}
+user = {DATABASE_MAIL_USER}
+password = {DATABASE_MAIL_PASSWORD}
+hosts = {DATABASE_HOST}
+dbname = {DATABASE_MAIL_DB_NAME}
 query = select destination as destinations from aliases where source = '%s' and enabled = true;
