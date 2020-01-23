@@ -6,10 +6,10 @@ services:
       - "8080:8080"
   saslauthd:
     environment:
-      - MYSQL_MAIL_USER=vmail
-      - MYSQL_MAIL_PASSWORD=vmaildbpass
-      - MYSQL_MAIL_DB_NAME=vmail
-      - MYSQL_HOST=mysql
+      - DATABASE_MAIL_USER=vmail
+      - DATABASE_MAIL_PASSWORD=vmaildbpass
+      - DATABASE_MAIL_DB_NAME=vmail
+      - DATABASE_HOST=mysql
     image: "saslauthd-deb:latest"
     volumes:
       # Mount socket that is shared with postfix and cyrus containers
@@ -35,10 +35,10 @@ services:
     depends_on:
       - saslauthd
     environment:
-      - MYSQL_MAIL_USER=vmail
-      - MYSQL_MAIL_PASSWORD=vmaildbpass
-      - MYSQL_MAIL_DB_NAME=vmail
-      - MYSQL_HOST=mysql
+      - DATABASE_MAIL_USER=vmail
+      - DATABASE_MAIL_PASSWORD=vmaildbpass
+      - DATABASE_MAIL_DB_NAME=vmail
+      - DATABASE_HOST=mysql
       - POSTFIX_MY_HOSTNAME=mail.waswiegentiere.de
       - POSTFIX_MY_ORIGIN=waswiegentiere.de
       - CYRUS_HOST=cyrus:2003
@@ -56,7 +56,7 @@ services:
     volumes:
       - ./data:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: 123CHANGEME
+      DATABASE_ROOT_PASSWORD: 123CHANGEME
       MARIADB_ROOT_PASSWOR: 123CHANGEME
       # - MARIADB_ROOT_PASSWORD=123CHANGEME
     ports:
