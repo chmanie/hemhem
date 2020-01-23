@@ -3,6 +3,7 @@ FROM bitnami/minideb:buster
 RUN install_packages \
   postfix \
   postfix-mysql \
+  postfix-pgsql \
   rsyslog
 
 RUN mkdir -p /etc/postfix/sql
