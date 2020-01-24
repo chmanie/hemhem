@@ -29,6 +29,10 @@ if [[ -f "/usr/libexec/postfix/master" ]]; then
   cmd="/usr/libexec/postfix/master"
 fi
 
+if [[ -f "/usr/lib/postfix/sbin/master" ]]; then
+  cmd="/usr/lib/postfix/sbin/master"
+fi
+
 if [[ -f "/usr/lib/postfix/master" ]]; then
   cmd="/usr/lib/postfix/master"
 fi
