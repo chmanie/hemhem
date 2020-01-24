@@ -4,6 +4,7 @@ RUN install_packages \
   postfix \
   postfix-mysql \
   postfix-pgsql \
+  runit \
   rsyslog
 
 RUN mkdir -p /etc/postfix/sql
